@@ -2,58 +2,49 @@ import math
 # from PIL import Image
 from modules.vec3 import Vec3
 from modules.imageSaver import Image
-
+from modules.constants import *
 class Shape:
     def __init__(self, x=0, y=0, z=0):
-        # self.x = x
-        # self.y = y
-        # self.z = z
         self.position = Vec3(x, y, z)
+        self.pixel_map = [[WHITE for _ in range(WIDTH)] for _ in range(HEIGHT)]
+        self.coords = set()
         
     def __str__(self):
         return f"({self.x}, {self.y}, {self.z})"
         
     # def translate(self, dx, dy, dz):
     def translate(self, other : Vec3):
-        # self.x += dx
-        # self.y += dy
-        # self.z += dz
         self.position += other
-        
-    def save_to_ppm(self, filename):
-        size = (1000, 1000) # size of the image
-        # im = Image.new('RGB', size, (255, 255, 255)) # create a white image
-        im = Image(image_width=size[0], image_height=size[1]) # create a white image
-        # pixel = im.load() # create the pixel map
-        pixel = im.load() # create the pixel map
-
-        # iterate over the image and color the pixels according to the shape
-        for i in range(size[0]):
-            for j in range(size[1]):
+    
+    def updatePixelMap(self, image: Image, 
+                       cords: Vec3 = Vec3(0, 0, 0), 
+                       color: Vec3 = BLACK):
+        # for now its only color and coordinates of center of shape
+        points_to_remove = set()
+        points_to_add = set()
+        self.translate(cords)
+        for i in range(WIDTH):
+            for j in range(HEIGHT):
                 if self.contains(i, j):
                     # pixel[i, j] = (0, 0, 0) # set the pixel to black
-                    pixel[i][j] = Vec3(0, 0, 0) # set the pixel to black
+                    self.pixel_map[i][j] = color # set the pixel to black
+                    if (i, j) not in self.coords:
+                        self.coords.add((i, j))
+                        points_to_add.add((i, j))
+                else:
+                    if (i, j) in self.coords:
+                        self.coords.remove((i, j))
+                        points_to_remove.add((i, j))
+                    self.pixel_map[i][j] = WHITE
 
-        # save the image to file
-        # im.save(filename, "PPM")
-        im.save(filename, pixel)
+        # update main map of shapes
+        image.update_map(points_to_add, points_to_remove, color)
+
+
+    def saveShapeToPixelMap(self):
+        ...
 
     # TODO maybe later implement PNG format :"DDD
-
-    # def save_to_png(self, filename):
-    #     size = (100, 100) # size of the image
-    #     im = Image.new('RGB', size, (255, 255, 255)) # create a white image
-    #     pixel = im.load() # create the pixel map
-
-    #     # iterate over the image and color the pixels according to the shape
-    #     for i in range(size[0]):
-    #         for j in range(size[1]):
-    #             if self.contains(i, j):
-    #                 pixel[i, j] = (0, 0, 0) # set the pixel to black
-
-    #     # save the image to file
-    #     im.save(filename, "PNG")
-    
 
 class Sphere(Shape):
     def __init__(self, x=0, y=0, z=0, radius=1):
@@ -68,7 +59,7 @@ class Sphere(Shape):
         return distance <= self.radius
 
     # get center of sphere
-    def center(self):
+    def getCenter(self):
         return self.position
 
 class Cuboid(Shape):
@@ -80,7 +71,7 @@ class Cuboid(Shape):
         
     def contains(self, x, y):
         # check if the point is inside the cuboid
-        return (x >= self.x - self.width/2 and x <= self.x + self.width/2 and
-                y >= self.y - self.height/2 and y <= self.y + self.height/2 and
-                self.z - self.depth/2 <= 0 and self.z + self.depth/2 >= 0)
+        return (x >= self.position.x - self.width/2 and x <= self.position.x + self.width/2 and
+                y >= self.position.y - self.height/2 and y <= self.position.y + self.height/2 and
+                self.position.z - self.depth/2 <= 0 and self.position.z + self.depth/2 >= 0)
 
