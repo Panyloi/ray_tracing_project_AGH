@@ -3,12 +3,20 @@ from math import sqrt
 
 class Vec3:
     def __init__(self, x=0.0, y=0.0, z=0.0) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
+        if isinstance(x, Vec3):
+            self.x = x.x
+            self.y = x.y
+            self.z = x.z
+        else:
+            self.x = x
+            self.y = y
+            self.z = z
 
     def tuple(self):
         return (self.x, self.y, self.z)
+
+    def reversed(self):
+        return Vec3(-self.x, -self.y, -self.z)
 
     def copy(self, other):
         return Vec3(self.x, self.y, self.z)
@@ -20,7 +28,7 @@ class Vec3:
         return Vec3(int(self.x), int(self.y), int(self.z))
 
     def normalize(self):
-        l = self.length
+        l = self.length()
 
         if l == 0:
             return self
