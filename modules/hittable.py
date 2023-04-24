@@ -3,6 +3,7 @@ from modules.ray import Ray
 from modules.vec3 import Vec3
 
 point3 = Vec3
+color = Vec3
 
 class HitRecord:
     p: point3
@@ -37,11 +38,13 @@ class HittableList(Hittable):
         temp_rec = HitRecord()
         hit_anything = False
         closest_t = t_max
+        color_to_return = color()
         
         for object in self.objects:
             if object.hit(r, t_min, closest_t, temp_rec):
                 hit_anything = True
                 closest_t = temp_rec.t
                 rec = temp_rec
+                color_to_return = object.sphere_color
         
-        return hit_anything, rec
+        return hit_anything, rec, color_to_return
