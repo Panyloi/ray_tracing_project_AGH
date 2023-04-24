@@ -1,4 +1,5 @@
 from math import sqrt
+from os import close
 from modules.shape import Sphere
 from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH
 from modules.hittable import HitRecord, Hittable, HittableList
@@ -29,12 +30,14 @@ def ray_color(r: Ray, world):
 
 def trace_ray(r: Ray, world, light: LightList):
     rec = HitRecord()
-    is_world_hit, rec, sphere_color = world.hit(r, 0, float("inf"), rec)
-    if is_world_hit:
-        return sphere_color * light.compute_lighting(rec.p, rec.normal)
-    unit_direction = r.get_direction().normalized()
-    t = 0.5 * (unit_direction.y + 1.0)
-    return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
+    is_world_hit, rec, closest_sphere = world.hit(r, 0, float("inf"), rec)
+    if closest_sphere is None:
+        unit_direction = r.get_direction().normalized()
+        t = 0.5 * (unit_direction.y + 1.0)
+        return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
+    
+    return closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
+    
 
 if __name__ == "__main__":
     #:TODO Przetestować działanie klasy shape
@@ -62,7 +65,7 @@ if __name__ == "__main__":
     light = LightList()
     light.add(Light("ambient", intensity=0.2))
     light.add(Light("point", intensity=0.6, position=point3(2, 1, 0)))
-    light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, 4)))
+    light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, -4)))
 
     # camera
     viewport_heigh = 1.0

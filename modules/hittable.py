@@ -38,13 +38,13 @@ class HittableList(Hittable):
         temp_rec = HitRecord()
         hit_anything = False
         closest_t = t_max
-        color_to_return = color()
+        closest_sphere = None
         
         for object in self.objects:
             if object.hit(r, t_min, closest_t, temp_rec):
                 hit_anything = True
                 closest_t = temp_rec.t
                 rec = temp_rec
-                color_to_return = object.sphere_color
+                closest_sphere = object
         
-        return hit_anything, rec, color_to_return
+        return hit_anything, rec, closest_sphere
