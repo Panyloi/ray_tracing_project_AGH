@@ -1,7 +1,7 @@
 from math import sqrt
 from os import close
 from modules.shape import Sphere
-from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH
+from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK
 from modules.hittable import HitRecord, Hittable, HittableList
 from modules.imageSaver import Image, image_to_viewport
 from modules.vec3 import Vec3
@@ -15,6 +15,8 @@ point3 = Vec3
 
 
 # setting background
+def reflect_ray(R:Vec3,N:Vec3):
+    return N*2*N.dot(R)-R
 
 
 def ray_color(r: Ray, world):
@@ -28,16 +30,27 @@ def ray_color(r: Ray, world):
     return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
 
 
-def trace_ray(r: Ray, world, light: LightList):
+def trace_ray(r: Ray, world, light: LightList, recursion_depth = 3):
     rec = HitRecord()
-    is_world_hit, rec, closest_sphere = world.hit(r, 0, float("inf"), rec)
+    is_world_hit, rec, closest_sphere, closest_t = world.hit(r, 0, float("inf"), rec)
     if closest_sphere is None:
-        unit_direction = r.get_direction().normalized()
-        t = 0.5 * (unit_direction.y + 1.0)
-        return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
+        # unit_direction = r.get_direction().normalized()
+        # t = 0.5 * (unit_direction.y + 1.0)
+        # return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
+        return BLACK
     
-    return closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
+    #Compute local color
+    local_color = closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
+    #return closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
     
+    #If we hit the recursion limit or the object is not reflective, we're done
+    r = closest_sphere.reflective
+    if recursion_depth <= 0 or r <= 0:
+        return local_color
+    
+    #Compute the reflected color
+    R = reflect_ray(-r.dir,rec.normal)
+    reflected_color = trace_ray(rec.p, R, light)
 
 if __name__ == "__main__":
     #:TODO Przetestować działanie klasy shape

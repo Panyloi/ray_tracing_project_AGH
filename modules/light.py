@@ -26,7 +26,7 @@ class LightList:
     # N - normal vector from center of shape to P
     def compute_lighting(self, P: point3, N: point3, shapes: HittableList):
         i = 0.0
-
+        
         for light in self.lights:
             if light.type == "ambient":
                 i += light.intensity

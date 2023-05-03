@@ -47,4 +47,4 @@ class HittableList(Hittable):
                 rec = temp_rec
                 closest_sphere = object
         
-        return hit_anything, rec, closest_sphere
+        return hit_anything, rec, closest_sphere, closest_t 
