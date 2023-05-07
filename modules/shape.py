@@ -55,11 +55,12 @@ class Shape:
     # TODO maybe later implement PNG format :"DDD
 
 class Sphere(Shape, Hittable):
-    def __init__(self, center = point3(), radius=1.0, sphere_color = color(1, 0, 0), reflective = 0.3):
+    def __init__(self, center = point3(), radius=1.0, sphere_color = color(1, 0, 0), reflective = 0.3, specular = 10):
         self.center = center
         self.radius = radius
         self.sphere_color = sphere_color
         self.reflective = reflective
+        self.specular = specular
         
     def hit(self, r: Ray, t_min: float, t_max: float, rec: HitRecord):
         """

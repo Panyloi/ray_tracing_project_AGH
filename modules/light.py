@@ -24,7 +24,7 @@ class LightList:
     
     # P - point where ligth and shape intersect
     # N - normal vector from center of shape to P
-    def compute_lighting(self, P: point3, N: point3, shapes: HittableList):
+    def compute_lighting(self, P: point3, N: point3, shapes: HittableList, V: point3, s):
         i = 0.0
         
         for light in self.lights:
@@ -40,12 +40,19 @@ class LightList:
                 
                 # Shadow checking
                 tmp_rec = HitRecord()
-                hit_anything, rec, shadow_sphere = shapes.hit(Ray(P, L), 0.001, t_max, tmp_rec)
+                hit_anything, rec, shadow_sphere, clostest_t = shapes.hit(Ray(P, L), 0.001, t_max, tmp_rec)
                 if shadow_sphere is not None:
                     # print("{}".format(i))
                     continue
                 n_dot_l = L.dot(N)
                 if n_dot_l > 0:
                     i += light.intensity * n_dot_l/(N.length() * L.length())
-        
+
+                # Specular
+                if s != -1:
+                    R = N*2*N.dot(L)-L
+                    r_dot_v = R.dot(V)
+                    if r_dot_v > 0:
+                        i += light.intensity * pow(r_dot_v / (R.length()*V.length()), s)
+                
         return i

@@ -32,7 +32,7 @@ def ray_color(r: Ray, world):
 
 def trace_ray(r: Ray, world, light: LightList, recursion_depth = 3):
     rec = HitRecord()
-    is_world_hit, rec, closest_sphere, closest_t = world.hit(r, 0, float("inf"), rec)
+    is_world_hit, rec, closest_sphere, closest_t = world.hit(r, 0.001, float("inf"), rec)
     if closest_sphere is None:
         # unit_direction = r.get_direction().normalized()
         # t = 0.5 * (unit_direction.y + 1.0)
@@ -40,17 +40,24 @@ def trace_ray(r: Ray, world, light: LightList, recursion_depth = 3):
         return BLACK
     
     #Compute local color
-    local_color = closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
+    P = r.orig+r.dir*closest_t
+    N = P - closest_sphere.center
+    N = N.normalized()
+    local_color = closest_sphere.sphere_color * light.compute_lighting(P, N, world, r.dir*(-1), closest_sphere.specular)
     #return closest_sphere.sphere_color * light.compute_lighting(rec.p, rec.normal, world)
     
     #If we hit the recursion limit or the object is not reflective, we're done
-    r = closest_sphere.reflective
-    if recursion_depth <= 0 or r <= 0:
+    ref = closest_sphere.reflective
+    if recursion_depth <= 0 or ref <= 0:
         return local_color
     
     #Compute the reflected color
-    R = reflect_ray(-r.dir,rec.normal)
-    reflected_color = trace_ray(rec.p, R, light)
+    R = reflect_ray(r.dir*(-1),N)
+    r.orig = P
+    r.dir = R
+    reflected_color = trace_ray(r,world, light, recursion_depth-1)
+    
+    return local_color*(1-ref)+reflected_color*ref
 
 if __name__ == "__main__":
     #:TODO Przetestować działanie klasy shape
@@ -67,9 +74,9 @@ if __name__ == "__main__":
     world = HittableList()
     # world.add(Sphere(point3(0,0,-1), 0.5))
     # world.add(Sphere(point3(0,-100.5,-1), 100))
-    world.add(Sphere(point3(0, -1, -3), 1))
-    world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1)))
-    world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0)))
+    world.add(Sphere(point3(0, -1, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=1000))
+    world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1), reflective=0.7, specular= 300))
+    world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 100))
     # ground
     world.add(Sphere(point3(0, -5001, 0), 5000, sphere_color=color(1, 1, 0)))
     
@@ -91,7 +98,6 @@ if __name__ == "__main__":
     lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
 
     # render
-
     for j in range(HEIGHT - 1, -1, -1):
         # print("Scaning remining: {}\r".format(j))
         for i in range(WIDTH):
@@ -104,7 +110,7 @@ if __name__ == "__main__":
 
 
     # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
-    image.save("listing5.ppm")
+    image.save("listing2.ppm")
 
 # UWAGI
 # przy mnożeniu przez sklara Vec3 -> scalar musi być po prawej stronie bo python krzyczy błąd TypeError: unsupported operand type(s) for *: 'float' and 'Vec3'
