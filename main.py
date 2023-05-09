@@ -1,7 +1,7 @@
 from math import sqrt
 from os import close
 from modules.shape import Sphere
-from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK, random_number
+from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK, random_number, MAX_DEPTH
 from modules.hittable import HitRecord, Hittable, HittableList
 from modules.imageSaver import Image, image_to_viewport
 from modules.vec3 import *
@@ -9,16 +9,48 @@ from modules.ray import Ray
 from modules.light import LightList, Light
 from modules.camera import Camera
 
+
 # setting background
 def reflect_ray(R:Vec3,N:Vec3):
     return N*2*N.dot(R)-R
 
 
-def ray_color(r: Ray, world):
+def random_in_unit_sphere():    
+    while 1:
+        rand_vec3 = Vec3.random(-1,1)
+        if rand_vec3.length()**2 >= 1: continue
+        return rand_vec3
+        
+
+def random_unit_vector():
+    rand_vec3 = random_in_unit_sphere()
+    return rand_vec3.normalized()
+
+
+def random_in_hemisphere(normal :Vec3):
+    in_unit_sphere = random_in_unit_sphere()
+    if in_unit_sphere.dot(normal) > 0.0:
+        return in_unit_sphere
+    else:
+        return in_unit_sphere*(-1)
+
+
+def ray_color(r: Ray, world, depth: int):
     rec = HitRecord()
-    is_world_hit, rec, sphere_color = world.hit(r, 0, float("inf"), rec)
+    if depth <= 0:
+        return color(0,0,0)
+
+    is_world_hit, rec, sphere_color, closest_t = world.hit(r, 0.001, float("inf"), rec)
     if is_world_hit:
+        #scattered = Ray(r.dir, r.orig)
+        #attenuation = color(0,0,0)
+        #if(rec.mat.scatter(r, rec, attenuation, scattered)):
+        #    return attenuation * ray_color(scattered, world, depth-1)
+        target = rec.p + random_in_hemisphere(rec.normal)
         return (rec.normal + color(1, 1, 1)) * 0.5
+        r = Ray(rec.p, target-rec.p)
+        return ray_color(r, world, depth-1)
+        #return color(0,0,0)
 
     unit_direction = r.get_direction().normalized()
     t = 0.5 * (unit_direction.y + 1.0)
@@ -28,12 +60,14 @@ def ray_color(r: Ray, world):
 def trace_ray(r: Ray, world, light: LightList, recursion_depth = 3):
     rec = HitRecord()
     is_world_hit, rec, closest_sphere, closest_t = world.hit(r, 0.001, float("inf"), rec)
+
     if closest_sphere is None:
         # unit_direction = r.get_direction().normalized()
         # t = 0.5 * (unit_direction.y + 1.0)
         # return color(1.0, 1.0, 1.0) * (1 - t) + color(0.5, 0.7, 1.0) * t
         return BLACK
     
+
     #Compute local color
     P = r.orig+r.dir*closest_t
     N = P - closest_sphere.center
@@ -63,24 +97,30 @@ if __name__ == "__main__":
     # cuboid1 = shape.Cuboid(750, 750, 0, 50, 50).updatePixelMap(image)
 
     # image
-    image = Image(samples_per_pixel=3)
+    image = Image(samples_per_pixel=4)
 
     # world
     world = HittableList()
+
+    # material_ground = Lambertian(color(0.8,0.8,0.0))
+    # material_center = Lambertian(color(0.7,0.3,0.3))
+    # material_left = Metal(color(0.8,0.8,0.8))
+    # material_right = Metal(color(0.8,0.6,0.2))
+
     # world.add(Sphere(point3(0,0,-1), 0.5))
     # world.add(Sphere(point3(0,-100.5,-1), 100))
-    world.add(Sphere(point3(0, -1, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=1000))
-    world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1), reflective=0.7, specular= 300))
-    world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 100))
+    world.add(Sphere(point3(0, 0, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=500))
+    world.add(Sphere(point3(-3, 0, -5), 1, sphere_color = color(0.4, 0.6, 1), reflective=0.7, specular= 500))
+    world.add(Sphere(point3(3, 0, -5), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 10))
+    
     # ground
     world.add(Sphere(point3(0, -5001, 0), 5000, sphere_color=color(1, 1, 0)))
     
-
     # light
     light = LightList()
-    light.add(Light("ambient", intensity=0.2))
-    light.add(Light("point", intensity=0.6, position=point3(2, 1, 0)))
-    light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, -4)))
+    light.add(Light("ambient", intensity=0.4))
+    light.add(Light("point", intensity=0.8, position=point3(2, 1, 0)))
+    light.add(Light("direction", intensity=0.3, direction=Vec3(1, 4, -4)))
 
     # camera
     # viewport_heigh = 1.0
@@ -92,7 +132,7 @@ if __name__ == "__main__":
     # vertical = Vec3(0, viewport_heigh, 0)
     # lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
 
-    cam = Camera()
+    cam = Camera(point3(0,0.6,0))
 
     # render
     for j in range(HEIGHT - 1, -1, -1):
@@ -105,13 +145,14 @@ if __name__ == "__main__":
                 v = (j + random_number()) / (HEIGHT - 1)
                 r = cam.get_ray(u, v)
                 # pixel_color = ray_color(r, world)
-                pixel_color += trace_ray(r, world, light)
+                pixel_color += trace_ray(r, world, light, 3)
+                # pixel_color += ray_color(r, world, 50)
 
             image.write_color((j, i), pixel_color)  # some modulo staff
 
 
     # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
-    image.save("example8.ppm")
+    image.save("antyaliasing_4.ppm")
 
 # UWAGI
 # przy mnożeniu przez sklara Vec3 -> scalar musi być po prawej stronie bo python krzyczy błąd TypeError: unsupported operand type(s) for *: 'float' and 'Vec3'

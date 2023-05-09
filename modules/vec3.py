@@ -1,5 +1,5 @@
 from math import sqrt
-
+import random
 
 class Vec3:
     def __init__(self, x=0.0, y=0.0, z=0.0) -> None:
@@ -53,6 +53,20 @@ class Vec3:
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,
         )
+
+    def random(min: float, max: float):
+        return Vec3(random.uniform(min,max), random.uniform(min,max), random.uniform(min,max))
+    
+
+    def near_zero(self):
+        # Return True if the vector is close to zero in all dimensions.
+        s = 1e-8
+        return abs(self.x) < s and abs(self.y) < s and abs(self.z) < s
+
+
+    def reflect(self, other):
+        return self - self.dot(other)*2*other
+
 
     def dot(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z

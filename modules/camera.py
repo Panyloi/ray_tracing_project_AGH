@@ -6,7 +6,7 @@ class Camera:
     aspect_ratio = 16.0 / 16.0
     viewport_width = 1.0
     viewport_heigh = aspect_ratio * viewport_width
-    focal_length = 1.0
+    focal_length = 0.6
 
     def __init__(
         self,
