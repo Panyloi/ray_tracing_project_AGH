@@ -102,7 +102,8 @@ class Vec3:
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.z == other.z
 
-
+point3 = Vec3
+color = Vec3
 
 
 if __name__ == '__main__':

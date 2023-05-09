@@ -1,18 +1,13 @@
 from math import sqrt
 from os import close
 from modules.shape import Sphere
-from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK
+from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK, random_number
 from modules.hittable import HitRecord, Hittable, HittableList
 from modules.imageSaver import Image, image_to_viewport
-from modules.vec3 import Vec3
+from modules.vec3 import *
 from modules.ray import Ray
 from modules.light import LightList, Light
-
-
-# aliasing
-color = Vec3
-point3 = Vec3
-
+from modules.camera import Camera
 
 # setting background
 def reflect_ray(R:Vec3,N:Vec3):
@@ -68,7 +63,7 @@ if __name__ == "__main__":
     # cuboid1 = shape.Cuboid(750, 750, 0, 50, 50).updatePixelMap(image)
 
     # image
-    image = Image()
+    image = Image(samples_per_pixel=3)
 
     # world
     world = HittableList()
@@ -88,29 +83,35 @@ if __name__ == "__main__":
     light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, -4)))
 
     # camera
-    viewport_heigh = 1.0
-    viewport_width = ASPECT_RATIO * viewport_heigh
-    focal_length = 1.0
+    # viewport_heigh = 1.0
+    # viewport_width = ASPECT_RATIO * viewport_heigh
+    # focal_length = 1.0
 
-    origin = point3(0, 0, 0)
-    horizontal = Vec3(viewport_width, 0, 0)
-    vertical = Vec3(0, viewport_heigh, 0)
-    lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
+    # origin = point3(0, 0, 0)
+    # horizontal = Vec3(viewport_width, 0, 0)
+    # vertical = Vec3(0, viewport_heigh, 0)
+    # lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
+
+    cam = Camera()
 
     # render
     for j in range(HEIGHT - 1, -1, -1):
-        # print("Scaning remining: {}\r".format(j))
+        print("Scaning remining: {}".format(j), end = '\r')
         for i in range(WIDTH):
-            u = i / (WIDTH - 1)
-            v = j / (HEIGHT - 1)
-            r = Ray(origin, lower_left_corner + horizontal * u + vertical * v - origin)
-            # pixel_color = ray_color(r, world)
-            pixel_color = trace_ray(r, world, light)
+            pixel_color = color()
+            for s in range(0, image.samples_per_pixel):
+
+                u = (i + random_number()) / (WIDTH -1)
+                v = (j + random_number()) / (HEIGHT - 1)
+                r = cam.get_ray(u, v)
+                # pixel_color = ray_color(r, world)
+                pixel_color += trace_ray(r, world, light)
+
             image.write_color((j, i), pixel_color)  # some modulo staff
 
 
     # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
-    image.save("listing2.ppm")
+    image.save("example8.ppm")
 
 # UWAGI
 # przy mnożeniu przez sklara Vec3 -> scalar musi być po prawej stronie bo python krzyczy błąd TypeError: unsupported operand type(s) for *: 'float' and 'Vec3'
