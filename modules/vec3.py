@@ -68,6 +68,9 @@ class Vec3:
     
     def __mul__(self, scalar):
         return Vec3(self.x * scalar, self.y * scalar, self.z * scalar)
+        
+    def __rmul__(self, scalar):
+        return Vec3(self.x * scalar, self.y * scalar, self.z * scalar)
 
     def __truediv__(self, scalar):
         return Vec3(self.x / scalar, self.y / scalar, self.z / scalar)
@@ -101,6 +104,9 @@ class Vec3:
     
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.z == other.z
+    
+    def get_max_val(self):
+        return max(self.x, self.y, self.z)
 
 point3 = Vec3
 color = Vec3

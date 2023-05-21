@@ -27,6 +27,7 @@ class Hittable:
 class HittableList(Hittable):
     def __init__(self, object = None) -> None:
         self.objects = list() if object is None else list(object)
+        self._index = 0
 
     def clear(self):
         self.objects.clear()
@@ -38,7 +39,7 @@ class HittableList(Hittable):
         temp_rec = HitRecord()
         hit_anything = False
         closest_t = t_max
-        closest_sphere = None
+        closest_sphere = None 
         
         for object in self.objects:
             if object.hit(r, t_min, closest_t, temp_rec):
@@ -47,4 +48,19 @@ class HittableList(Hittable):
                 rec = temp_rec
                 closest_sphere = object
         
-        return hit_anything, rec, closest_sphere, closest_t 
+        return hit_anything, rec, closest_sphere, closest_t
+    
+    def intersects(self, r: Ray):
+        ...
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        if self._index < len(self.objects):
+            obj = self.objects[self._index]
+            self._index += 1
+            return obj
+        raise StopIteration
+            
+

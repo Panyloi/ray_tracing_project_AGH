@@ -54,10 +54,10 @@ class Image:  # resposnisble for creating and managing image
         b = pixel_color.z
 
         # number of samples for each color in RGB to help antyaliasing
-        scale = 1.0 / self.samples_per_pixel
-        r *= scale
-        g *= scale
-        b *= scale
+        # scale = 1.0 / self.samples_per_pixel
+        # r *= scale
+        # g *= scale
+        # b *= scale
 
 
         self.pixelmap[cords[0]][cords[1]] = Vec3(

@@ -1,4 +1,5 @@
-from math import sqrt
+import math
+import random
 from os import close
 from modules.shape import Sphere
 from modules.constants import ASPECT_RATIO, HEIGHT, WIDTH, BLACK, random_number
@@ -8,6 +9,8 @@ from modules.vec3 import *
 from modules.ray import Ray
 from modules.light import LightList, Light
 from modules.camera import Camera
+from modules.tracer import Tracer
+
 
 # setting background
 def reflect_ray(R:Vec3,N:Vec3):
@@ -69,11 +72,13 @@ if __name__ == "__main__":
     world = HittableList()
     # world.add(Sphere(point3(0,0,-1), 0.5))
     # world.add(Sphere(point3(0,-100.5,-1), 100))
-    world.add(Sphere(point3(0, -1, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=1000))
-    world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1), reflective=0.7, specular= 300))
-    world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 100))
-    # ground
-    world.add(Sphere(point3(0, -5001, 0), 5000, sphere_color=color(1, 1, 0)))
+
+
+    # world.add(Sphere(point3(0, -1, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=1000))
+    # world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1), reflective=0.7, specular= 300))
+    # world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 100))
+    # # ground
+    # world.add(Sphere(point3(0, -5001, 0), 5000, sphere_color=color(1, 1, 0)))
     
 
     # light
@@ -82,36 +87,136 @@ if __name__ == "__main__":
     light.add(Light("point", intensity=0.6, position=point3(2, 1, 0)))
     light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, -4)))
 
-    # camera
-    # viewport_heigh = 1.0
-    # viewport_width = ASPECT_RATIO * viewport_heigh
-    # focal_length = 1.0
 
-    # origin = point3(0, 0, 0)
-    # horizontal = Vec3(viewport_width, 0, 0)
-    # vertical = Vec3(0, viewport_heigh, 0)
-    # lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
+    world.add(Sphere(point3(1e5+1,40.8,81.6), 1e5, sphere_color = color(.75,.25,.25), emit = Vec3())) # Left
+    world.add(Sphere(point3(-1e5+99,40.8,81.6), 1e5, color(.25,.25,.75),emit =  Vec3())) # Right
+    world.add(Sphere(point3(50,40.8, 1e5), 1e5, color(.75,.75,.75), emit = Vec3())) # Back
+    world.add(Sphere(point3(50, 1e5, 81.6), 1e5, color(.75,.75,.75), emit = Vec3())) #Bottom
+    world.add(Sphere(point3(50,-1e5+81.6,81.6), 1e5, color(.75,.75,.75), emit = Vec3())) # Top
+    world.add(Sphere(point3(20,16.5,40), 16.5, color(1,1,1) * 0.799, emit = Vec3()))
+    world.add(Sphere(point3(50,16.5,80), 16.5, color(1,1,1) * 0.799, emit = Vec3()))
+    world.add(Sphere(point3(75,16.5,120), 16.5, color(1,1,1) * 0.799, emit = Vec3()))
+    world.add(Sphere(point3(50,65.1,40), 1.5, color(), emit = Vec3(4,4,4) * 100)) # Light
+    world.add(Sphere(point3(50,65.1,120), 1.5, color(), emit = Vec3(4,4,4) * 100)) # Light
 
-    cam = Camera()
+    SNAPSHOT_INTERVAL = 10
+    SAMPLES = 3
+    FOCUS_EFFECT = False
+    FOCAL_LENGTH = 35
+    APERTURE_FACTOR = 1
 
-    # render
-    for j in range(HEIGHT - 1, -1, -1):
-        print("Scaning remining: {}".format(j), end = '\r')
-        for i in range(WIDTH):
-            pixel_color = color()
-            for s in range(0, image.samples_per_pixel):
+    # Set which scene should be raytraced
+    tracer = Tracer(world)
 
-                u = (i + random_number()) / (WIDTH -1)
-                v = (j + random_number()) / (HEIGHT - 1)
-                r = cam.get_ray(u, v)
-                # pixel_color = ray_color(r, world)
-                pixel_color += trace_ray(r, world, light)
+    # Set up the camera
+    aperture = 0.5135 / APERTURE_FACTOR
+    cx = Vec3((WIDTH * aperture) / HEIGHT, 0, 0)
+    dir_norm = Vec3(0, -0.042612, -1).normalized()
+    L = 140
+    L_new = APERTURE_FACTOR * L
+    L_diff = L - L_new
+    cam_shift = dir_norm * L_diff
+    if L_diff < 0:
+        cam_shift = cam_shift * 1.5
+    L = L_new
+    camera = Ray(Vec3(50, 52, 295.6) + cam_shift, dir_norm)
+    cy = (cx.cross(camera.dir)).normalized() * aperture
 
-            image.write_color((j, i), pixel_color)  # some modulo staff
+    # Take a set number of samples per pixel
+    for sample in range(SAMPLES):
+        print("Taking sample {}".format(sample), end="\r")
+
+        for y in range(HEIGHT):
+            for x in range(WIDTH):
+                Ux = 2 * random.random()
+                Uy = 2 * random.random()
+                if Ux < 1:
+                    dx = math.sqrt(Ux) - 1
+                else:
+                    dx = 1 - math.sqrt(2 - Ux)
+                if Uy < 1:
+                    dy = math.sqrt(Uy) - 1
+                else:
+                    dy = 1 - math.sqrt(2 - Uy)
+
+                d = (cx * (((x + dx) / float(WIDTH)) - 0.5)) + (cy * (((y + dy) / float(HEIGHT)) - 0.5)) + camera.dir
+                ray = Ray(camera.orig + d * 140, d.normalized())
+
+                if FOCUS_EFFECT:
+                    fp = (camera.orig + d * L) + d.normalized() * FOCAL_LENGTH
+                    del_x = (cx * dx * L / float(WIDTH))
+                    del_y = (cy * dy * L / float(HEIGHT))
+                    point = camera.orig + d * L
+                    point = point + del_x + del_y
+                    d = (fp - point).normalized()
+                    ray = Ray(camera.orig + d * L, d.normalized())
+
+                rads = tracer.get_radiance(ray, 0, light)
+                image.write_color((HEIGHT - y - 1, x), rads)
+
+    image.save("render.ppm")
 
 
-    # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
-    image.save("example8.ppm")
+
+# if __name__ == "__main__":
+#     #:TODO Przetestować działanie klasy shape
+#     # Dodać potrzebne pola i metody
+#     # image = Image()
+#     # sphere1 = shape.Sphere(500, 500, 40, radius=100).updatePixelMap(image)
+#     # sphere2 = shape.Sphere(250, 250, 40, radius=100).updatePixelMap(image, color=Vec3(255, 0, 255))
+#     # cuboid1 = shape.Cuboid(750, 750, 0, 50, 50).updatePixelMap(image)
+
+#     # image
+#     image = Image(samples_per_pixel=3)
+
+#     # world
+#     world = HittableList()
+#     # world.add(Sphere(point3(0,0,-1), 0.5))
+#     # world.add(Sphere(point3(0,-100.5,-1), 100))
+#     world.add(Sphere(point3(0, -1, -3), 1, sphere_color= color(1, 0, 0), reflective=0.3, specular=1000))
+#     world.add(Sphere(point3(2, 0, -4), 1, sphere_color = color(0, 0, 1), reflective=0.7, specular= 300))
+#     world.add(Sphere(point3(-2, 0, -4), 1, sphere_color = color(0, 1, 0), reflective=0.1, specular= 100))
+#     # ground
+#     world.add(Sphere(point3(0, -5001, 0), 5000, sphere_color=color(1, 1, 0)))
+    
+
+#     # light
+#     light = LightList()
+#     light.add(Light("ambient", intensity=0.2))
+#     light.add(Light("point", intensity=0.6, position=point3(2, 1, 0)))
+#     light.add(Light("direction", intensity=0.2, direction=Vec3(1, 4, -4)))
+
+#     # camera
+#     # viewport_heigh = 1.0
+#     # viewport_width = ASPECT_RATIO * viewport_heigh
+#     # focal_length = 1.0
+
+#     # origin = point3(0, 0, 0)
+#     # horizontal = Vec3(viewport_width, 0, 0)
+#     # vertical = Vec3(0, viewport_heigh, 0)
+#     # lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
+
+#     cam = Camera()
+
+#     # render
+#     for j in range(HEIGHT - 1, -1, -1):
+#         print("Scaning remining: {}".format(j), end = '\r')
+#         for i in range(WIDTH):
+#             pixel_color = color()
+#             for s in range(0, image.samples_per_pixel):
+
+#                 u = (i + random_number()) / (WIDTH -1)
+#                 v = (j + random_number()) / (HEIGHT - 1)
+#                 r = cam.get_ray(u, v)
+#                 # pixel_color = ray_color(r, world)
+#                 pixel_color += trace_ray(r, world, light)
+
+#             image.write_color((j, i), pixel_color)  # some modulo staff
+
+
+#     # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
+#     image.save("example8.ppm")
+
 
 # UWAGI
 # przy mnożeniu przez sklara Vec3 -> scalar musi być po prawej stronie bo python krzyczy błąd TypeError: unsupported operand type(s) for *: 'float' and 'Vec3'

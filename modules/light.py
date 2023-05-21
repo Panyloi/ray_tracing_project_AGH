@@ -15,13 +15,23 @@ class Light:
 class LightList:
     def __init__(self, object = None) -> None:
         self.lights = list() if object is None else list(object)
+        self._index = 0
     
     def clear(self):
         self.lights.clear()
     
     def add(self, object):
         self.lights.append(object)
+
+    def __iter__(self):
+        return self
     
+    def __next__(self):
+        if self._index < len(self.lights):
+            obj = self.lights[self._index]
+            self._index += 1
+            return obj
+        raise StopIteration
     # P - point where ligth and shape intersect
     # N - normal vector from center of shape to P
     def compute_lighting(self, P: point3, N: point3, shapes: HittableList, V: point3, s):

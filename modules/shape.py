@@ -65,12 +65,14 @@ class Sphere(Shape, Hittable):
         sphere_color=color(1, 0, 0),
         reflective=0.3,
         specular=10,
+        emit = Vec3()
     ):
         self.center = center
         self.radius = radius
         self.sphere_color = sphere_color
         self.reflective = reflective
         self.specular = specular
+        self.emit = emit
 
     def hit(self, r: Ray, t_min: float, t_max: float, rec: HitRecord):
         """
@@ -112,7 +114,7 @@ class Sphere(Shape, Hittable):
         return True
 
     # get center of sphere
-    def getCenter(self):
+    def get_center(self):
         return self.center
 
     def get_sphere_color(self):
@@ -127,6 +129,19 @@ class Sphere(Shape, Hittable):
         b *= scale
 
         return Vec3(clamp(r, 0.0, 0.999), clamp(g, 0.0, 0.999), clamp(b, 0.0, 0.999))
+
+    def get_normal(self, pos: Vec3):
+        return (pos - self.center) / self.radius
+    
+    def random_point(self):
+        theta = random.random() * math.pi
+        phi = random.random() * 2 * math.pi
+
+        # Convert to Cartesian and scale by radius
+        dxr = self.radius * math.sin(theta) * math.cos(phi)
+        dyr = self.radius * math.sin(theta) * math.sin(phi)
+        dzr = self.radius * math.cos(theta)
+        return Vec3(self.center.x + dxr, self.center.y + dyr, self.center.z + dzr)
 
 
 class Cuboid(Shape):
