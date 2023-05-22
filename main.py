@@ -8,6 +8,8 @@ from modules.vec3 import *
 from modules.ray import Ray
 from modules.light import LightList, Light
 from modules.camera import Camera
+from threading import Thread
+import time
 
 # setting background
 def reflect_ray(R:Vec3,N:Vec3):
@@ -91,9 +93,9 @@ if __name__ == "__main__":
     # horizontal = Vec3(viewport_width, 0, 0)
     # vertical = Vec3(0, viewport_heigh, 0)
     # lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length)
-
+    threads = []
     cam = Camera()
-
+    start_time = time.perf_counter()
     # render
     for j in range(HEIGHT - 1, -1, -1):
         print("Scaning remining: {}".format(j), end = '\r')
@@ -109,7 +111,7 @@ if __name__ == "__main__":
 
             image.write_color((j, i), pixel_color)  # some modulo staff
 
-
+    print("\nWhole time to execute: {}".format(time.perf_counter() - start_time))
     # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
     image.save("example8.ppm")
 
