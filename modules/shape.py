@@ -128,6 +128,8 @@ class Sphere(Shape, Hittable):
 
         return Vec3(clamp(r, 0.0, 0.999), clamp(g, 0.0, 0.999), clamp(b, 0.0, 0.999))
 
+    def get_normal(self, pos: point3):
+        return (pos - self.center) * (1. / self.radius)
 
 class Cuboid(Shape):
     def __init__(self, x=0, y=0, z=0, width=1, height=1, depth=1):

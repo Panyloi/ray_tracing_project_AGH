@@ -1,5 +1,6 @@
-from modules.vec3 import Vec3
+from modules.vec3 import *
 import random
+import math
 
 # library for holding all variables that are used in project
 BLACK = Vec3(0, 0, 0)
@@ -26,3 +27,6 @@ def clamp(x, min_val, max_val):
     if x > max_val:
         return max_val
     return x
+
+def degrees_to_radians(degrees):
+    return degrees * math.pi / 180.0
