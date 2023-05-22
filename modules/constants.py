@@ -16,6 +16,7 @@ VH = 1  # viewport height
 DISTANCE = 1  # distance between canvas and viewport
 
 SAMPLES_PER_PIXEL = 1
+MAX_DEPTH = 50
 
 # function to return random value between [0, 1) or between [min_val, max_val]
 def random_number(min_val: float = 0.0, max_val: float = 1.0) -> float:
