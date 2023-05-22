@@ -9,7 +9,7 @@ Projekt symulujący działanie technologii Ray Tracing napisany w języku Python
 
 ## Demo
 
-Insert gif or link to demo
+![alt text](./demo.gif)
 
 
 ## Funkcje programu
@@ -18,9 +18,7 @@ Insert gif or link to demo
 - Możliwość ustwienia pozycji kamery i jej skierowania w odpowiedni punkt
 - Antyaliasing
 - Efekt szkła, odbicia światła i cienie
-- Możliwość ustawienia materiału, z którego jest wykonany obiekt
 - Własna implementacja zapisu do formatu PPM
-- Optymalizacja za pomocą śledzenia promieni metodą Monte Carlo z próbkowaniem ważności
 
 
 ## Optymalizacje

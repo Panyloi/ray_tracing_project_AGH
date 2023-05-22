@@ -123,7 +123,7 @@ if __name__ == "__main__":
     horizontal = Vec3(viewport_width, 0, 0)
     vertical = Vec3(0, viewport_heigh, 0)
     lower_left_corner = origin - horizontal / 2 - vertical / 2 - Vec3(0, 0, focal_length)
-    cam = Camera(point3(0, 0.6, 0))
+    cam = Camera(point3(0, 0, 0))
 
     # origin = point3(0, 0, 0)
     # horizontal = Vec3(viewport_width, 0, 0)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     number_of_frames = 30
     dt = 360/number_of_frames
     t = 0
-    cam = Camera(point3(0,1,3), point3(0, 3, -3), Vec3(0,1,0), 90)
+    cam = Camera(point3(0,0.5,6), point3(0, 3, -3), Vec3(0,1,0), 45)
     start_time = time.perf_counter()
     # render
     for k in range(number_of_frames):
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         t += dt
         print("\nWhole time to execute: {}".format(time.perf_counter() - start_time))
         # cuboid2 = shape.Cuboid(900, 900, 0, 150, 100).updatePixelMap(image, color=Vec3(128, 255, 0))
-        image.save("gif_folder/render{}.ppm".format(k))
+        image.save("render{}.ppm".format(k))
 
 # UWAGI
 # przy mnożeniu przez sklara Vec3 -> scalar musi być po prawej stronie bo python krzyczy błąd TypeError: unsupported operand type(s) for *: 'float' and 'Vec3'
