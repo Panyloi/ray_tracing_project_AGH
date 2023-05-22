@@ -21,11 +21,6 @@ Projekt symulujący działanie technologii Ray Tracing napisany w języku Python
 - Własna implementacja zapisu do formatu PPM
 
 
-## Optymalizacje
-
-What optimizations did you make in your code? E.g. refactors, performance improvements, accessibility
-
-
 ## Instalacja
 
 Instalacja wymaga jedynie sklonowania repozytorium 'git clone'
